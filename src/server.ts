@@ -1,5 +1,5 @@
 import express from 'express';
-const http = require('http');
+import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import fs from 'fs';
