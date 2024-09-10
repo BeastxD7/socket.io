@@ -221,6 +221,17 @@ io.on('connection', (socket: Socket) => {
     startHintSequence(roomId);
   });
 
+// Add this endpoint to check if a room exists
+app.get('/check-room/:roomId', (req, res) => {
+  const { roomId } = req.params;
+
+  if (rooms[roomId]) {
+    res.json({ exists: true });
+  } else {
+    res.json({ exists: false });
+  }
+});
+
   socket.on('disconnect', () => {
     console.log(`Connection disconnected: ${socket.id}`);
     for (const roomId in rooms) {
