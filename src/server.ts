@@ -16,8 +16,8 @@ const io = new Server(httpServer, {
 interface Hint {
   text: string;
   answer: string;
-  index?: number;
-  total?: number;
+  index?: number;  // Optional index for the hint
+  total?: number;  // Optional total number of hints
 }
 
 interface User {
@@ -34,7 +34,7 @@ interface Room {
   timer: NodeJS.Timeout | null;
   guessedUsers: string[];
   correctGuessMade: boolean;
-  inputDisabled: boolean;
+  inputDisabled: boolean; // New flag for input disablement
 }
 
 const hintsFilePath = path.join(__dirname, 'hints.json');
@@ -44,7 +44,6 @@ try {
   hints = JSON.parse(fs.readFileSync(hintsFilePath, 'utf8'));
 } catch (error) {
   console.error('Failed to read hints file:', error);
-  process.exit(1); // Exit if critical error occurs
 }
 
 const rooms: Record<string, Room> = {};
@@ -57,7 +56,7 @@ const broadcastRoomStatus = (roomId: string) => {
   io.to(roomId).emit('room-status', {
     players: room.users,
     leader: room.leader,
-    inputDisabled: room.inputDisabled,
+    inputDisabled: room.inputDisabled, // Broadcast the input disable state
   });
 };
 
@@ -78,14 +77,15 @@ const startHintSequence = (roomId: string) => {
 
   room.guessedUsers = [];
   room.correctGuessMade = false;
-  room.inputDisabled = false;
+  room.inputDisabled = false; // Enable input at the start of a new hint
 
+  // Add hint index and total number of hints
   io.to(roomId).emit('hint', {
     text: hint.text,
-    index: room.currentHintIndex + 1,
-    total: room.hints.length,
+    index: room.currentHintIndex + 1, // Hint index starts from 1
+    total: room.hints.length, // Total number of hints
   });
-  io.to(roomId).emit('input-disabled', { disabled: room.inputDisabled });
+  io.to(roomId).emit('input-disabled', { disabled: room.inputDisabled }); // Notify all users to enable input
 
   console.log(`Hint for room ${roomId}: ${hint.text}`);
 
@@ -133,7 +133,7 @@ io.on('connection', (socket: Socket) => {
         timer: null,
         guessedUsers: [],
         correctGuessMade: false,
-        inputDisabled: false,
+        inputDisabled: false, // Initialize inputDisabled
       };
       console.log(`Room ${roomId} created`);
     }
@@ -176,10 +176,10 @@ io.on('connection', (socket: Socket) => {
           room.guessedUsers.push(username);
 
           room.correctGuessMade = true;
-          room.inputDisabled = true;
+          room.inputDisabled = true; // Disable input for all users
 
           io.to(roomId).emit('reveal-answer', { answer: hint.answer, correctUsername: username });
-          io.to(roomId).emit('input-disabled', { disabled: room.inputDisabled });
+          io.to(roomId).emit('input-disabled', { disabled: room.inputDisabled }); // Notify all users to disable input
 
           clearInterval(room.timer!);
 
@@ -215,21 +215,22 @@ io.on('connection', (socket: Socket) => {
     room.users.forEach(user => (user.score = 0));
     room.timer && clearInterval(room.timer);
     room.timer = null;
-    room.inputDisabled = false;
+    room.inputDisabled = false; // Reset inputDisabled for new game
     io.to(roomId).emit('game-reset');
     broadcastRoomStatus(roomId);
     startHintSequence(roomId);
   });
 
-  app.get('/check-room/:roomId', (req, res) => {
-    const { roomId } = req.params;
+// Add this endpoint to check if a room exists
+app.get('/check-room/:roomId', (req, res) => {
+  const { roomId } = req.params;
 
-    if (rooms[roomId]) {
-      res.json({ exists: true });
-    } else {
-      res.json({ exists: false });
-    }
-  });
+  if (rooms[roomId]) {
+    res.json({ exists: true });
+  } else {
+    res.json({ exists: false });
+  }
+});
 
   socket.on('disconnect', () => {
     console.log(`Connection disconnected: ${socket.id}`);
