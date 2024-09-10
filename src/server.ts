@@ -1,13 +1,13 @@
 import express from 'express';
-import { createServer } from 'http';
+const http = require('http');
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
+const server = http.createServer(app);
+const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000/", "https://langhub2.vercel.app/"],
     methods: ["GET", "POST"]
