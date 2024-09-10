@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "server",
   "main": "server.ts",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "stage": "tsc && git status && git add . "
