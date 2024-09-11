@@ -6,11 +6,10 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:3000/", "https://langhub2.vercel.app/"],
-    methods: ["GET", "POST"]
+    origin: '*',
   },
 });
 
