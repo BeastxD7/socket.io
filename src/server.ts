@@ -6,10 +6,11 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
+const server = http.createServer(app);
+const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: ["http://localhost:3000/", "https://langhub2.vercel.app/"],
+    methods: ["GET", "POST"]
   },
 });
 
@@ -220,6 +221,17 @@ io.on('connection', (socket: Socket) => {
     broadcastRoomStatus(roomId);
     startHintSequence(roomId);
   });
+
+// Add this endpoint to check if a room exists
+app.get('/check-room/:roomId', (req, res) => {
+  const { roomId } = req.params;
+
+  if (rooms[roomId]) {
+    res.json({ exists: true });
+  } else {
+    res.json({ exists: false });
+  }
+});
 
   socket.on('disconnect', () => {
     console.log(`Connection disconnected: ${socket.id}`);
