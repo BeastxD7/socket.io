@@ -1,7 +1,9 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "server",
+  "main": "server.ts",
+  "type": "module",
   "scripts": {
      "build": "tsc",
     "start": "node dist/server.js",
