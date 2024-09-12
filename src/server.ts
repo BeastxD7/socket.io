@@ -10,6 +10,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: '*',
+    methods: ['GET', 'POST'],
   },
 });
 
@@ -65,9 +66,15 @@ const startHintSequence = (roomId: string) => {
   if (!room) return;
 
   if (room.currentHintIndex >= room.hints.length) {
-    io.to(roomId).emit('game-ended', { finalScores: room.users });
+    // Sort users by score in descending order
+    const sortedUsers = [...room.users].sort((a, b) => b.score - a.score);
+  
+    // Emit the sorted leaderboard data to the room
+    io.to(roomId).emit('game-ended', { leaderboard: sortedUsers });
+  
     return;
   }
+  
 
   const hint = room.hints[room.currentHintIndex];
   if (!hint || !hint.answer) {
