@@ -166,43 +166,49 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('guess-word', ({ roomId, guess, username }: { roomId: string; guess: string; username: string }) => {
     console.log(`Received guess from ${username} in room ${roomId}: ${guess}`);
+
     const room = rooms[roomId];
     if (!room) return;
 
     const hint = room.hints[room.currentHintIndex];
     if (!hint) return;
 
-    if (hint.answer.toLowerCase() === guess.toLowerCase()) {
-      if (!room.guessedUsers.includes(username)) {
-        const user = room.users.find(user => user.username === username);
-        if (user) {
-          user.score += 10;
-          io.to(roomId).emit('score-update', { username, score: user.score });
-          console.log(`${username} guessed correctly in room ${roomId}`);
-          io.to(roomId).emit('guess-result', { username, guess, isCorrect: true });
-          room.guessedUsers.push(username);
+    // Normalize and trim spaces from both the hint answer and the user's guess
+    const normalizedAnswer = hint.answer.trim().toLowerCase();
+    const normalizedGuess = guess.trim().toLowerCase();
 
-          room.correctGuessMade = true;
-          room.inputDisabled = true; // Disable input for all users
+    if (normalizedAnswer === normalizedGuess) {
+        if (!room.guessedUsers.includes(username)) {
+            const user = room.users.find(user => user.username === username);
+            if (user) {
+                user.score += 10;
+                io.to(roomId).emit('score-update', { username, score: user.score });
+                console.log(`${username} guessed correctly in room ${roomId}`);
+                io.to(roomId).emit('guess-result', { username, guess: normalizedGuess, isCorrect: true });
+                room.guessedUsers.push(username);
 
-          io.to(roomId).emit('reveal-answer', { answer: hint.answer, correctUsername: username });
-          io.to(roomId).emit('input-disabled', { disabled: room.inputDisabled }); // Notify all users to disable input
+                room.correctGuessMade = true;
+                room.inputDisabled = true; // Disable input for all users
 
-          clearInterval(room.timer!);
+                io.to(roomId).emit('reveal-answer', { answer: hint.answer, correctUsername: username });
+                io.to(roomId).emit('input-disabled', { disabled: room.inputDisabled }); // Notify all users to disable input
 
-          setTimeout(() => {
-            room.currentHintIndex++;
-            startHintSequence(roomId);
-          }, 5000);
+                clearInterval(room.timer!);
+
+                setTimeout(() => {
+                    room.currentHintIndex++;
+                    startHintSequence(roomId);
+                }, 5000);
+            }
+        } else {
+            console.log(`${username} has already guessed correctly for this hint.`);
         }
-      } else {
-        console.log(`${username} has already guessed correctly for this hint.`);
-      }
     } else {
-      io.to(roomId).emit('guess-result', { username, guess, isCorrect: false });
-      console.log(`${username} guessed incorrectly in room ${roomId}`);
+        io.to(roomId).emit('guess-result', { username, guess: normalizedGuess, isCorrect: false });
+        console.log(`${username} guessed incorrectly in room ${roomId}`);
     }
-  });
+});
+
 
   socket.on('start-game', (roomId: string) => {
     console.log(`Starting game in room ${roomId}`);
