@@ -129,8 +129,6 @@ io.on('connection', (socket: Socket) => {
   console.log(`New connection: ${socket.id}`);
 
   socket.on('join-room', (roomId: string, username: string) => {
-    console.log(`${username} is joining room ${roomId}`);
-
     if (!rooms[roomId]) {
       rooms[roomId] = {
         users: [],
@@ -140,7 +138,7 @@ io.on('connection', (socket: Socket) => {
         timer: null,
         guessedUsers: [],
         correctGuessMade: false,
-        inputDisabled: false, // Initialize inputDisabled
+        inputDisabled: false,
       };
       console.log(`Room ${roomId} created`);
     }
@@ -236,14 +234,20 @@ io.on('connection', (socket: Socket) => {
 
 // Add this endpoint to check if a room exists
 app.get('/check-room/:roomId', (req, res) => {
-  const { roomId } = req.params;
+  const roomId = req.params.roomId.trim().toLowerCase();
+  // Add logging to see the current state of rooms and the requested roomId
+  console.log("Checking room ID:", roomId);
+  console.log("Current rooms:", Object.keys(rooms)); // Print available room IDs for debugging
 
   if (rooms[roomId]) {
+    console.log(`Room ${roomId} exists`);
     res.json({ exists: true });
   } else {
+    console.log(`Room ${roomId} does not exist`);
     res.json({ exists: false });
   }
 });
+
 
   socket.on('disconnect', () => {
     console.log(`Connection disconnected: ${socket.id}`);
