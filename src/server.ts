@@ -14,6 +14,13 @@ const io = new Server(httpServer, {
   },
 });
 
+app.get("/heath", (req , res) => {
+  res.status(200).json({
+    status:"healthy",
+    message:"server running successful!"
+  })
+})
+
 interface Hint {
   text: string;
   answer: string;
